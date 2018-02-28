@@ -124,10 +124,11 @@ else
     image(isnan(image)) = 0;
     result = image(params.maxEyeMovement+1:params.maxEyeMovement + params.nSignal);
     imageEmbeddedReceptorIndex = find(image ~= 0);
-    %set up the x co-ordinates of the original and resulting signal
+    %Set up the x co-ordinates of the signal
     x = 1:params.nSignal;
+    %Set base case for output if the user does not want interpolation
     output_Image = result;
-    %interpolate the data if the user indicated so
+    %Interpolate the data if the user indicated so
     if params.interpolate > 0
         output_Image = interp1(x(imageEmbeddedReceptorIndex), result(imageEmbeddedReceptorIndex), x, 'linear', 'extrap');
     end

@@ -14,16 +14,8 @@
 %   02/14/18  ak, dhb  Added header comments to Anant's first draft.
 %   02/22/18  ak       Finished second draft
 
-% TODO:
-%   (Boring things)
-%   a) Fix code so you can specify maxEyeMovement = 0.
-%   b) Then fix code so that with no eye movements, the samples line up
-%   directly with the signal they are sampling, when the noise is also
-%   zero.
-%
-%   (Interesting things)
-%   a) Now lets add a smarter but not realisitc interpolation algorithm, 
-%   that has access to exactly where the eye is at each time.
+% Close up and clear, to avoid confusion
+clear; close all;
 
 % Parameters describing what we'll simulate
 params.nSignal = 128;           % Max size of signal vector
@@ -68,6 +60,7 @@ if params.method == 1
     image = zeros(params.nSignal + 2 * params.maxEyeMovement, 1);
     repeats = zeros(params.nSignal + 2 * params.maxEyeMovement, 1);
 end
+
 % Loop through and take a sample of what the eye sees for x number of trials
 % Keep track of the position by adding it to the position history array
 % Add some noise to the data in order to simulate the imperfections of the
@@ -92,7 +85,16 @@ for i = 1:params.nTimes
         output(i,:) = image(pos+1:pos + params.eyeSize);
     end
 end
+
+% Reconstruct the image from the data
+%
+% We have two methods (so far).
 if params.method == 0
+    % This method assumes the receptors are always at their nominal
+    % positions and simply interpolates to estimate the image, based on
+    % this assumption.  It's a "dumb" method, in that the possibility of
+    % eye movements is not incorporated.
+    
     % Get the average response of each position that the eye had
     averageOutput = mean(output,1);
 
@@ -119,20 +121,31 @@ if params.method == 0
     plot(x, interpolatedImage,'b', 'LineWidth', 2);
     legend("original signal", "samples", "eye's interpretation");
 else 
-    % get the average response of each position that the eye had
+    % This is a "very smart" method that is given access to the actual eye
+    % movements (which is not realistic) and which interpolates based on
+    % this knowledge of where the eye was at each time.  What we do is
+    % accumulate the average response for each actual receptor position,
+    % taking eye movements into account, and interpolates on the basis of
+    % these.
+    
+    % Get the average response of each position that the eye had
     image = image ./ repeats;
     image(isnan(image)) = 0;
     result = image(params.maxEyeMovement+1:params.maxEyeMovement + params.nSignal);
     imageEmbeddedReceptorIndex = find(image ~= 0);
-    %Set up the x co-ordinates of the signal
+    
+    % Set up the x co-ordinates of the signal
     x = 1:params.nSignal;
-    %Set base case for output if the user does not want interpolation
+    
+    % Set base case for output if the user does not want interpolation
     output_Image = result;
-    %Interpolate the data if the user indicated so
+    
+    % Interpolate the data if the user indicated so
     if params.interpolate > 0
         output_Image = interp1(x(imageEmbeddedReceptorIndex), result(imageEmbeddedReceptorIndex), x, 'linear', 'extrap');
     end
-    %plot the data
+    
+    % Plot the data
     plot(x, signal, 'r', 'LineWidth', 2);
     hold on;
     plot(x, output_Image, 'b', 'LineWidth', 2);

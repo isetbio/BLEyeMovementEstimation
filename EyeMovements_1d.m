@@ -14,8 +14,6 @@
 %   02/14/18  ak, dhb  Added header comments to Anant's first draft.
 %   02/22/18  ak       Finished second draft
 
-% Close up and clear, to avoid confusion
-clear; close all;
 
 % Parameters describing what we'll simulate
 params.nSignal = 128;           % Max size of signal vector
@@ -25,9 +23,9 @@ params.nReceptors = 38;         % Number of receptors, can't exceed number of pi
 params.eyeDistribution = 0;     % 0 = random, 1 = uniform
 params.maxEyeMovement = 10;     % Maximum number of pixels the eye can go left/right
 params.noiseSd = 0.05;          % Amount of noise added to receptor responses (sd)
-params.nTimes = 40;             % Number of "times" to generate data for.
-params.interpolate = 1;         % Decide whether or not to interpolate the data
-params.method = 1;              % 0 = simple method, 1 = smart method
+params.nTimes = 100;             % Number of "times" to generate data for.
+params.interpolate = 0;         % Decide whether or not to interpolate the data
+params.method = 0;              % 0 = simple method, 1 = smart method
 
 % Set up some signal.  This is just a set of numbers on a vector of length
 % params.nSignal.  You can generate random numbers, or draw a sine wave, or
@@ -56,98 +54,15 @@ receptorIndex = find(eye == 1);
 positionHistory = zeros(params.nTimes, 1);
 pos_0 = round(params.nSignal/2) + params.maxEyeMovement - round(params.eyeSize/2);
 pos_0_image = round(params.nSignal/2) - round(params.eyeSize/2);
-if params.method == 1    
-    image = zeros(params.nSignal + 2 * params.maxEyeMovement, 1);
-    repeats = zeros(params.nSignal + 2 * params.maxEyeMovement, 1);
-end
 
 % Loop through and take a sample of what the eye sees for x number of trials
 % Keep track of the position by adding it to the position history array
 % Add some noise to the data in order to simulate the imperfections of the
 % eye.
-output = zeros(params.nTimes,params.eyeSize);
-for i = 1:params.nTimes
-    % Find position that we want, store it, and sample the signal
-    % corresponding to the eye being in this position.
-    pos = round(pos_0 + params.maxEyeMovement * (2 * rand - 1));
-    positionHistory(i) = pos;
-    outputThisPosition = eye .* buffered_signal(pos:pos+params.eyeSize-1);
-    
-    % Add noise to the receptor responses
-    % Save the responses for this position.
-    noise = randn(params.nReceptors, 1) * params.noiseSd;
-    if params.method == 0
-        outputThisPosition(receptorIndex) = outputThisPosition(receptorIndex) + noise;
-        output(i,:) = outputThisPosition;
-    else 
-        image(pos:(pos + params.eyeSize-1)) = image(pos:(pos + params.eyeSize-1)) + outputThisPosition;
-        repeats(pos:(pos + params.eyeSize-1)) = repeats(pos:(pos + params.eyeSize-1)) + eye;
-        output(i,:) = image(pos+1:pos + params.eyeSize);
-    end
-end
-
-% Reconstruct the image from the data
-%
-% We have two methods (so far).
 if params.method == 0
-    % This method assumes the receptors are always at their nominal
-    % positions and simply interpolates to estimate the image, based on
-    % this assumption.  It's a "dumb" method, in that the possibility of
-    % eye movements is not incorporated.
-    
-    % Get the average response of each position that the eye had
-    averageOutput = mean(output,1);
-
-    % Visualize the output for each trial as a row in a grayscale image
-    figure; clf; 
-    imshow(output'/max(output(:)));
-
-    % Plot the signal and the corresponding average resonses
-    imageEmbeddedAverageOutput = zeros(params.nSignal,1);
-    imageEmbeddedAverageOutput(pos_0_image:(pos_0_image+params.eyeSize-1)) = averageOutput;
-    imageEmbeddedReceptorIndex = find(imageEmbeddedAverageOutput ~= 0);
-    figure; clf; hold on
-    x = 1:params.nSignal;
-    plot(x, signal,'r','LineWidth', 3);
-    plot(x(imageEmbeddedReceptorIndex),imageEmbeddedAverageOutput(imageEmbeddedReceptorIndex),'ro','MarkerFaceColor','r','MarkerSize',12);
-
-    % Interpolate the data if the user indicated so
-    if params.interpolate > 0
-        interpolatedImage = interp1(x(imageEmbeddedReceptorIndex),imageEmbeddedAverageOutput(imageEmbeddedReceptorIndex), x,'linear','extrap');
-    end
-
-    % Add interpolated image to the plot
-    hold on;
-    plot(x, interpolatedImage,'b', 'LineWidth', 2);
-    legend("original signal", "samples", "eye's interpretation");
-else 
-    % This is a "very smart" method that is given access to the actual eye
-    % movements (which is not realistic) and which interpolates based on
-    % this knowledge of where the eye was at each time.  What we do is
-    % accumulate the average response for each actual receptor position,
-    % taking eye movements into account, and interpolates on the basis of
-    % these.
-    
-    % Get the average response of each position that the eye had
-    image = image ./ repeats;
-    image(isnan(image)) = 0;
-    result = image(params.maxEyeMovement+1:params.maxEyeMovement + params.nSignal);
-    imageEmbeddedReceptorIndex = find(image ~= 0);
-    
-    % Set up the x co-ordinates of the signal
-    x = 1:params.nSignal;
-    
-    % Set base case for output if the user does not want interpolation
-    output_Image = result;
-    
-    % Interpolate the data if the user indicated so
-    if params.interpolate > 0
-        output_Image = interp1(x(imageEmbeddedReceptorIndex), result(imageEmbeddedReceptorIndex), x, 'linear', 'extrap');
-    end
-    
-    % Plot the data
-    plot(x, signal, 'r', 'LineWidth', 2);
-    hold on;
-    plot(x, output_Image, 'b', 'LineWidth', 2);
-    legend("original signal", "eye's interpretation");
+    postitionHistory = Method_0(pos_0,eye,buffered_signal,...
+    positionHistory,receptorIndex,pos_0_image,signal,params);
+else
+    postitionHistory = Method_1(pos_0,eye,buffered_signal,...
+    positionHistory,receptorIndex,signal,params);
 end

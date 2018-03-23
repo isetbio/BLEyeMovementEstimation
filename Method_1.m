@@ -27,11 +27,11 @@ function [recoveredSignal] = Method_1(eye,samples,positionHistory,params)
 %                          means the receptor array is centered on the signal.
 %                          Can be positive or negative.
 %     params             - Standard parameters structure for the calculation.
-%                           See EyeMovements_1d for details 
+%                          See EyeMovements_1d for details 
 % Outputs:
 %     recovered_signal   - A 1D vector representing the signal that was
-%                           created based on the brains interpretation of
-%                           the sample data given the current method
+%                          created based on the brains interpretation of
+%                          the sample data given the current method
 
 % Optional key/value pairs:
 %    None.
@@ -47,6 +47,7 @@ function [recoveredSignal] = Method_1(eye,samples,positionHistory,params)
 repeats = zeros(params.nSignal,1);
 image = zeros(params.nSignal,1);
 receptor_index = find(eye==1);
+
 % Loop through and count the number of times each position was looked at by
 % a receptor
 for i = 1:params.nTimes
@@ -61,5 +62,25 @@ end
 image = image ./ repeats;
 image(isnan(image)) = 0;
 recoveredSignal = image;
+
+% 1) Return from this routine effectiveReceptorLocations and effectiveSamples
+%
+% 2) Write an interpolate routine that takes effectiveReceptorLocations, effectiveSamples
+% imageLocations and returns the interpolatedSignal
+%
+% 3) Pass imageLocations to the Method routines, and interpolate there.
+%
+% 4) Return from the Method routines effectiveReceptorLocations, effectiveSamples
+% and interpolatedSignal.
+%
+% 5) Pass the interpolated signal to the plot routine, along with
+% effectiveReceptorLocations, effectiveSamples and imageLocations.
+%     imageEmbeddedReceptorIndex = find(recovered_signal ~= 0);
+%     effectiveReceptorLocations = x(imageEmbeddedReceptorIndex)
+%     effectiveSamples = recovered_signal(imageEmbeddedReceptorIndex)
+%     imageLocations = x;
+%     interopolatedSignal =  interp1(effectiveReceptorLocations,...
+%             effectiveSamples, imageLocations,'linear');
+
 
 

@@ -15,6 +15,8 @@
 %   02/22/18  ak       Finished second draft
 %   03/23/18  ak       Finished modulating code
 
+% Freeze rng so we get same samples on multiple runs
+rng('default');
 
 %% Parameters describing what we'll simulate
 params.nSignal = 128;           % Max size of signal vector
@@ -25,8 +27,8 @@ params.eyeDistribution = 0;     % 0 = random, 1 = uniform
 params.maxEyeMovement = 20;     % Maximum number of pixels the eye can go left/right
 params.noiseSd = 0.05;          % Amount of noise added to receptor responses (sd)
 params.nTimes = 100;            % Number of "times" to generate data for.
-params.interpolate = 0;         % Decide whether or not to interpolate the data
-params.method = 1;              % 0 = simple method, 1 = smart method
+params.interpolate = 1;         % Decide whether or not to interpolate the data
+params.method = 0;              % 0 = simple method, 1 = smart method
 
 %% Set up some signal.
 %
@@ -34,7 +36,6 @@ params.method = 1;              % 0 = simple method, 1 = smart method
 % params.nSignal.  You can generate random numbers, or draw a sine wave, or
 % any pattern you like.  You can even have more than one option here,
 % controlled by some flag.
-
 signal = Generate_Signal(params.signalType, params.nSignal);
 
 %% Set up eye.

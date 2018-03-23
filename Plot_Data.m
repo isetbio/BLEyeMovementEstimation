@@ -44,12 +44,20 @@ plot(x(imageEmbeddedReceptorIndex),recovered_signal(imageEmbeddedReceptorIndex),
 if params.interpolate > 0
     interpolatedImage = interp1(x(imageEmbeddedReceptorIndex),...
         recovered_signal(imageEmbeddedReceptorIndex), x,'linear');
+    
     % Add interpolated image to the plot
     hold on;
     plot(x, interpolatedImage,'b', 'LineWidth', 2);
 end
+
 % Set standard axis and legend
 axis([1,params.nSignal,-1.5,1.5])
-legend("original signal", "samples", "eye's interpretation");
+
+if (params.interpolate > 0)
+    legend("original signal", "samples", "eye's interpretation");
+else
+    legend("original signal", "samples");
+end
+
 end
 

@@ -58,8 +58,6 @@ if params.method == 0
     recovered_signal = Method_0(samples, eye, params);
 elseif  params.method == 1
     recovered_signal = Method_1(eye, samples, positionHistory, params);
-elseif params.method == 2
-    receovered_signal = Method_2(samples, params);
 end
 
 %% Plot the data

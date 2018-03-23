@@ -13,18 +13,19 @@
 %   02/xx/18  ak       Wrote first draft.
 %   02/14/18  ak, dhb  Added header comments to Anant's first draft.
 %   02/22/18  ak       Finished second draft
+%   03/23/18  ak       Finished modulating code
 
 
 %% Parameters describing what we'll simulate
 params.nSignal = 128;           % Max size of signal vector
 params.signalType = 1;          % 0 = random, 1 = sine wave, 2 = constant
 params.eyeSize = 82;            % Number of pixels in the eye
-params.nReceptors = 38;         % Number of receptors, can't exceed number of pixels.
+params.nReceptors = 40;         % Number of receptors, can't exceed number of pixels.
 params.eyeDistribution = 0;     % 0 = random, 1 = uniform
-params.maxEyeMovement = 15;     % Maximum number of pixels the eye can go left/right
+params.maxEyeMovement = 20;     % Maximum number of pixels the eye can go left/right
 params.noiseSd = 0.05;          % Amount of noise added to receptor responses (sd)
 params.nTimes = 100;            % Number of "times" to generate data for.
-params.interpolate = 1;         % Decide whether or not to interpolate the data
+params.interpolate = 0;         % Decide whether or not to interpolate the data
 params.method = 1;              % 0 = simple method, 1 = smart method
 
 %% Set up some signal.
@@ -33,9 +34,7 @@ params.method = 1;              % 0 = simple method, 1 = smart method
 % params.nSignal.  You can generate random numbers, or draw a sine wave, or
 % any pattern you like.  You can even have more than one option here,
 % controlled by some flag.
-%
-% The signal gets inserted into a buffer that is larger and padded with
-% zeros, so that we have room to move the eye.
+
 signal = Generate_Signal(params.signalType, params.nSignal);
 
 %% Set up eye.
@@ -47,21 +46,22 @@ signal = Generate_Signal(params.signalType, params.nSignal);
 % any choice of parameters as long as there are not more receptors than eye
 % positions.
 eye = Generate_Eye(params.eyeSize, params.nReceptors, params.eyeDistribution);
-receptorIndex = find(eye == 1);
 
 %% Get the receptor samples for each time.
 [samples,positionHistory] = Get_Samples(signal,eye,params);
-
-
 
 % Loop through and take a sample of what the eye sees for x number of trials
 % Keep track of the position by adding it to the position history array
 % Add some noise to the data in order to simulate the imperfections of the
 % eye.
 if params.method == 0
-    postitionHistory = Method_0(pos_0,eye,buffered_signal,...
-    positionHistory,receptorIndex,pos_0_image,signal,params);
-else
-    postitionHistory = Method_1(pos_0,eye,buffered_signal,...
-    positionHistory,receptorIndex,signal,params);
+    recovered_signal = Method_0(samples, eye, params);
+elseif  params.method == 1
+    recovered_signal = Method_1(eye, samples, positionHistory, params);
+elseif params.method == 2
+    receovered_signal = Method_2(samples, params);
 end
+
+%% Plot the data
+Plot_Data(samples, signal, recovered_signal, params);
+

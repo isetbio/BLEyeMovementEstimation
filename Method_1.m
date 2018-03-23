@@ -1,8 +1,8 @@
-function [recoveredSignal,effectiveSamples] = Method_1(eye,samples,positionHistory,params)
-positionHistory,receptorIndex,signal,params)
+function [recoveredSignal] = Method_1(eye,samples,positionHistory,params)
 % Reconstruct signal with perfect knowledge of eye position history
 %
 % Syntax:
+%   [recoveredSignal] = Method_1(eye,samples,positionHistory,params)
 %
 % Description:
 %   This runs the "smart" method of analysis. This method takes
@@ -14,15 +14,25 @@ positionHistory,receptorIndex,signal,params)
 %   At each time point, we have a location for each receptor.  This defines
 %   an effective position for each receptor at each time point, in the the
 %   spatial domain of the signal.  Over time points, for each sampled
-%   location, we can obtain the average response.  The effectiveSamples is 
-%   a 2 by N matrix, where the first row contains each position that was in
-%   fact sampled over eye movements and the second row contains the
-%   corresponding average response.
+%   location, we can obtain the average response and use this to generate a
+%   model of the signal that is formed using the given data
 %
 % Inputs:
-%
+%     eye                - A vector with 1's where there are receptors
+%     samples            - A m by n matrix, where m is the number of time
+%                          points and n is the number of receptors.  So
+%                          each row is the responses at one time point.
+%     positionHistory    - A vector containing the positional offset of the
+%                          receptor array with respect to the signal, where 0
+%                          means the receptor array is centered on the signal.
+%                          Can be positive or negative.
+%     params             - Standard parameters structure for the calculation.
+%                           See EyeMovements_1d for details 
 % Outputs:
-%
+%     recovered_signal   - A 1D vector representing the signal that was
+%                           created based on the brains interpretation of
+%                           the sample data given the current method
+
 % Optional key/value pairs:
 %    None.
 %
@@ -31,52 +41,25 @@ positionHistory,receptorIndex,signal,params)
 
 % History
 %   03/14/18  dhb, ak  Redefine interface.
+%   03/22/18  ak       Finished modulating code
 
-output = zeros(params.nTimes,params.eyeSize);
-image = zeros(params.nSignal + 2 * params.maxEyeMovement, 1);
-repeats = zeros(params.nSignal + 2 * params.maxEyeMovement, 1);
+%% Get the average response of each position that the eye had
+repeats = zeros(params.nSignal,1);
+image = zeros(params.nSignal,1);
+receptor_index = find(eye==1);
+% Loop through and count the number of times each position was looked at by
+% a receptor
 for i = 1:params.nTimes
-    % Find position that we want, store it, and sample the signal
-    % corresponding to the eye being in this position.
-    pos = round(pos_0 + params.maxEyeMovement * (2 * rand - 1));
-    positionHistory(i) = pos;
-    outputThisPosition = eye .* buffered_signal(pos:pos+params.eyeSize-1);
-    
-    % Add noise to the receptor responses
-    % Save the responses for this position.
-    noise = randn(params.nReceptors, 1) * params.noiseSd;
-    outputThisPosition(receptorIndex) = outputThisPosition(receptorIndex) + noise;
-    image(pos:(pos + params.eyeSize-1)) = image(pos:(pos + params.eyeSize-1)) + outputThisPosition;
-    repeats(pos:(pos + params.eyeSize-1)) = repeats(pos:(pos + params.eyeSize-1)) + eye;
-    output(i,:) = image(pos+1:pos + params.eyeSize);
+    adjusted_pos = positionHistory(i) + floor(params.nSignal/2) - ...
+        floor(params.eyeSize/2);
+    adjusted_receptor_index = receptor_index + adjusted_pos;
+    repeats(adjusted_receptor_index) = repeats(adjusted_receptor_index) + 1;
+    image(adjusted_receptor_index) = image(adjusted_receptor_index) + ...
+        samples(:,i);
 end
 
-% Get the average response of each position that the eye had
 image = image ./ repeats;
 image(isnan(image)) = 0;
-result = image(params.maxEyeMovement+1:params.maxEyeMovement + params.nSignal);
-imageEmbeddedReceptorIndex = find(image ~= 0);
+recoveredSignal = image;
 
-% Set up the x co-ordinates of the original and resulting signal
-x = 1:params.nSignal;
-x = x';
-output_Image = result;
-
-% Structure params.interpolate the data if the user indicated so
-if params.interpolate > 0
-    output_Image = interp1(x(imageEmbeddedReceptorIndex), result(imageEmbeddedReceptorIndex), x, 'linear', 'extrap');
-end
-
-% Plot the data
-%
-% Visualize the output for each trial as a row in a grayscale image
-figure; clf; 
-imshow(output'/max(output(:)));
-
-% Make a graph that shows the signal, data, and recovered signal
-figure; clf; hold on
-plot(x, signal, 'r', 'LineWidth', 2);
-hold on;
-plot(x, output_Image, 'b', 'LineWidth', 2);
-legend("original signal", "eye's interpretation");
 

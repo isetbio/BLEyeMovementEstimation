@@ -1,8 +1,8 @@
-function [recovered_signal] = Method_0(samples, eye, params)
+function [recoveredSignal, interpolatedSignal] = Method_0(samples, eye, params)
 % Reconstruct signal with perfect knowledge of eye position history
 %
 % Syntax:
-%   [recovered_signal] = Method_0(samples, eye, params)
+%   [recoveredSignal, interpolatedSignal] = Method_0(samples, eye, params)
 %
 % Description:
 %   This runs the "simple" method of analysis. This method takes
@@ -22,10 +22,12 @@ function [recovered_signal] = Method_0(samples, eye, params)
 %     params             - Standard parameters structure for the calculation.
 %                           See EyeMovements_1d for details 
 % Outputs:
-%     recovered_signal   - A 1D vector representing the signal that was
-%                           created based on the brains interpretation of
-%                           the sample data given the current method
-
+%     recoveredSignal   - A 1D vector representing the signal that was
+%                         created based on the brains interpretation of
+%                         the sample data given the current method
+%     interpolatedSignal -  A 1D vector that is the recovered signal after
+%                           it has been interpolated       
+%
 % Optional key/value pairs:
 %    None.
 %
@@ -35,6 +37,7 @@ function [recovered_signal] = Method_0(samples, eye, params)
 % History
 %   03/14/18  dhb, ak  Redefine interface.
 %   03/22/18  ak       Finished modulating code
+%   04/01/18  ak       Adjusted code to interpolate in method
   
 %% Get the average response of each receptor
 samples = samples';
@@ -44,11 +47,19 @@ averageOutput = mean(samples,1);
 % Find eye's position with respect to vector indices
 pos_0 = floor(params.nSignal/2) - floor(params.eyeSize/2);
 
-% Create the recovered signal
-recovered_signal = zeros(params.nSignal,1);
+%% Create the recovered signal
+recoveredSignal = zeros(params.nSignal,1);
 imageEmbeddedReceptorIndex = find(eye == 1);
 imageEmbeddedReceptorIndex = imageEmbeddedReceptorIndex + pos_0;
-recovered_signal(imageEmbeddedReceptorIndex) = averageOutput;
+recoveredSignal(imageEmbeddedReceptorIndex) = averageOutput;
 
+%% Get interpolated signal
+x = 1:params.nSignal; 
+imageEmbeddedReceptorIndex = find(recoveredSignal ~= 0);
+effectiveReceptorLocations = x(imageEmbeddedReceptorIndex);
+effectiveSamples = recoveredSignal(imageEmbeddedReceptorIndex);
+imageLocations = x;
+interpolatedSignal = Interpolate(effectiveReceptorLocations,...
+effectiveSamples, imageLocations);
 
 

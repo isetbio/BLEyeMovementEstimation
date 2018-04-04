@@ -28,7 +28,8 @@ params.maxEyeMovement = 20;     % Maximum number of pixels the eye can go left/r
 params.noiseSd = 0.05;          % Amount of noise added to receptor responses (sd)
 params.nTimes = 100;            % Number of "times" to generate data for.
 params.interpolate = 1;         % Decide whether or not to interpolate the data
-params.method = 0;              % 0 = simple method, 1 = smart method
+params.method = 3;              % 0 = simple method, 1 = smart method
+params.alpha = 0.8;             % ratio with which trials effect learning
 
 %% Set up some signal.
 %
@@ -56,11 +57,15 @@ eye = Generate_Eye(params.eyeSize, params.nReceptors, params.eyeDistribution);
 % Add some noise to the data in order to simulate the imperfections of the
 % eye.
 if params.method == 0
-    recovered_signal = Method_0(samples, eye, params);
-elseif  params.method == 1
-    recovered_signal = Method_1(eye, samples, positionHistory, params);
+    [recoveredSignal, interpolatedSignal] = Method_0(samples, eye, params);
+elseif params.method == 1
+    [recoveredSignal, interpolatedSignal] = Method_1(eye, samples, positionHistory, params);
+elseif params.method == 2
+    [recoveredSignal, interpolatedSignal] = Method_2(eye, samples, positionHistory, params);
+elseif params.method == 3
+    [recoveredSignal, interpolatedSignal] = Method_3(eye, samples, params);    
 end
 
 %% Plot the data
-Plot_Data(samples, signal, recovered_signal, params);
+Plot_Data(samples, signal, recoveredSignal, interpolatedSignal, params);
 

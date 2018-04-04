@@ -1,4 +1,4 @@
-function [] = Plot_Data(samples, signal, recovered_signal, params)
+function [] = Plot_Data(samples, signal, recovered_signal, interpolatedSignal, params)
 % Plot the original and recovered signals
 %
 % Syntax:
@@ -8,13 +8,17 @@ function [] = Plot_Data(samples, signal, recovered_signal, params)
 %   
 %
 % Inputs:
+%     samples            - A 2d vector containing all the samples used in
+%                          the simulation
 %     signal             - A 1D vector which contains the values of the
-%                           original signal. 
-%     recovered_signal   - A 1D vector which contains the values of the
-%                           signal recovered using one of the analysis
-%                           methods
+%                          original signal. 
+%     recoveredSignal   -  A 1D vector which contains the values of the
+%                          signal recovered using one of the analysis
+%                          methods
+%     interpolatedSignal - A 1D vector containing the interpolated signal
+%                          based on the recovered signal
 %     params             - Standard parameters structure for the calculation.
-%                           See EyeMovements_1d for details 
+%                          See EyeMovements_1d for details 
 % Outputs:
 %    None.
 %    
@@ -25,6 +29,7 @@ function [] = Plot_Data(samples, signal, recovered_signal, params)
 %
 % History
 %   03/22/18  ak       Finished modulating code
+%   03/30/18  ak       Moved interpolation code to Interpolate function
 
 %% Plot the signals
 
@@ -42,12 +47,9 @@ plot(x(imageEmbeddedReceptorIndex),recovered_signal(imageEmbeddedReceptorIndex),
 
 % Interpolate the data if the user indicated so
 if params.interpolate > 0
-    interpolatedImage = interp1(x(imageEmbeddedReceptorIndex),...
-        recovered_signal(imageEmbeddedReceptorIndex), x,'linear');
-    
     % Add interpolated image to the plot
     hold on;
-    plot(x, interpolatedImage,'b', 'LineWidth', 2);
+    plot(x, interpolatedSignal,'b', 'LineWidth', 2);
 end
 
 % Set standard axis and legend

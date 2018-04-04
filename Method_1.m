@@ -1,4 +1,4 @@
-function [recoveredSignal] = Method_1(eye,samples,positionHistory,params)
+function [recoveredSignal, interpolatedSignal] = Method_1(eye,samples,positionHistory,params)
 % Reconstruct signal with perfect knowledge of eye position history
 %
 % Syntax:
@@ -29,9 +29,11 @@ function [recoveredSignal] = Method_1(eye,samples,positionHistory,params)
 %     params             - Standard parameters structure for the calculation.
 %                          See EyeMovements_1d for details 
 % Outputs:
-%     recovered_signal   - A 1D vector representing the signal that was
+%     recoveredSignal   - A 1D vector representing the signal that was
 %                          created based on the brains interpretation of
 %                          the sample data given the current method
+%     interpolatedSignal -  A 1D vector that is the recovered signal after
+%                           it has been interpolated 
 
 % Optional key/value pairs:
 %    None.
@@ -42,6 +44,7 @@ function [recoveredSignal] = Method_1(eye,samples,positionHistory,params)
 % History
 %   03/14/18  dhb, ak  Redefine interface.
 %   03/22/18  ak       Finished modulating code
+%   04/01/18  ak       Adjusted code to interpolate in method
 
 %% Get the average response of each position that the eye had
 repeats = zeros(params.nSignal,1);
@@ -63,24 +66,16 @@ image = image ./ repeats;
 image(isnan(image)) = 0;
 recoveredSignal = image;
 
-% 1) Return from this routine effectiveReceptorLocations and effectiveSamples
-%
-% 2) Write an interpolate routine that takes effectiveReceptorLocations, effectiveSamples
-% imageLocations and returns the interpolatedSignal
-%
-% 3) Pass imageLocations to the Method routines, and interpolate there.
-%
-% 4) Return from the Method routines effectiveReceptorLocations, effectiveSamples
-% and interpolatedSignal.
-%
-% 5) Pass the interpolated signal to the plot routine, along with
-% effectiveReceptorLocations, effectiveSamples and imageLocations.
-%     imageEmbeddedReceptorIndex = find(recovered_signal ~= 0);
-%     effectiveReceptorLocations = x(imageEmbeddedReceptorIndex)
-%     effectiveSamples = recovered_signal(imageEmbeddedReceptorIndex)
-%     imageLocations = x;
-%     interopolatedSignal =  interp1(effectiveReceptorLocations,...
-%             effectiveSamples, imageLocations,'linear');
+%% Get interpolated signal
+x = 1:params.nSignal; 
+imageEmbeddedReceptorIndex = find(recoveredSignal ~= 0);
+effectiveReceptorLocations = x(imageEmbeddedReceptorIndex);
+effectiveSamples = recoveredSignal(imageEmbeddedReceptorIndex);
+imageLocations = x;
+interpolatedSignal = Interpolate(effectiveReceptorLocations,...
+effectiveSamples, imageLocations);
+
+
 
 
 

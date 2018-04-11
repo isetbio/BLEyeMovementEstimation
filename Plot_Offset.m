@@ -31,11 +31,16 @@ function [] = Plot_Offset(positionHistory, offsetHistory, params)
 % History
 %   04/06/18   ak   First draft
 
+
 x = 1:params.nTimes;
 figure; clf; hold on
 plot(x,positionHistory,'ro','MarkerFaceColor','r','MarkerSize',12);
-plot(x,offsetHistory,'bo','MarkerFaceColor','b','MarkerSize',12);
-legend("Position History", "Offset History");
+plot(x,offsetHistory,'bo','MarkerFaceColor','b','MarkerSize',8);
+plot(x,positionHistory,'r');
+plot(x,offsetHistory,'b');
+xlabel('Time Step');
+ylabel('Eye Offset Position')
+legend({'Position History', 'Offset History'},'Location','NorthEastOutside');
 axis([1,params.nTimes,-params.maxEyeMovement,params.maxEyeMovement])
 end
 

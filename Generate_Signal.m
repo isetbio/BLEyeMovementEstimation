@@ -32,6 +32,7 @@ function [signal] = Generate_Signal(params)
 secondDim = params.nSignal^(params.dimension -1);
 n = rand;
 signal = zeros(params.nSignal, secondDim);
+
 %% Fill in values in accordance with the type of signal specified
 if params.signalType == 0
     for i = 1:params.nSignal
@@ -46,10 +47,10 @@ if params.signalType == 0
 elseif params.signalType == 1
     for i = 1:params.nSignal
         if params.dimension == 1
-            signal(i) = sin(pi * i / 32);
+            signal(i) = sin((2*pi*params.spatialFrequencyX*i)/params.nSignal + params.phaseX);
         else
             for j = 1:params.nSignal
-                signal(i,j) = sin(pi * i * j/32);
+                signal(i,j) = sin(((2*pi*params.spatialFrequencyX*i + params.phaseX) + (2*pi*params.spatialFrequencyY*j + params.phaseY))/params.nSignal);
             end
         end
     end

@@ -41,6 +41,7 @@ function [recoveredSignal, interpolatedSignal, offsetHistory] = Method_3(eye,sam
 runningImage = NaN(1,params.nSignal);
 imageLocation = 1:params.nSignal;
 offsetHistory = zeros(params.nTimes, 1);
+
 %% Cycle through the trials and make a more accurate image
 for i = 1:params.nTimes
     % Find the most likely offset

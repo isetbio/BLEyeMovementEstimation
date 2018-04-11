@@ -36,6 +36,7 @@ if(i ~= 1)
     imageLocation = 1:params.nSignal;
     possibleOffset = NaN(2 * params.maxEyeMovement + 1, 1);
     for i = -params.maxEyeMovement:params.maxEyeMovement
+        
         % Calculate the image at the current offset
         effectiveReceptorIndex = find(eye == 1) + i + floor(params.nSignal/2) -...
                                  floor(params.eyeSize/2);
@@ -45,6 +46,7 @@ if(i ~= 1)
         A = ~isnan(currentTrial);
         B = ~isnan(runningImage);
         C = A & B;
+        
         % Find the MSE at this offset and store it
         if(max(C) < 1)
             error = 0;
@@ -53,8 +55,10 @@ if(i ~= 1)
         end
         possibleOffset(i + params.maxEyeMovement + 1) = error;
     end
+    
     % Return the offset with the least error
     offset = find(possibleOffset == min(possibleOffset)) - params.maxEyeMovement - 1;
+    
     % Prevents cases where there are multiple offsets with 0 error. This
     % occurs when the eye is significantly smaller than the signal.
     offset = offset(1);

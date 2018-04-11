@@ -36,14 +36,19 @@ function [samples,positionHistory] = Get_Samples(signal,eye,params)
 %
 % History:
 %   03/14/18  dhb, ak   Drafted interface and comments.
+%   04/11/18  ak        Added 2D functionality
 %
 %% Create samples and positionHistory vectors
 samples = zeros(params.nReceptors, params.nTimes);
-positionHistory = zeros(params.nTimes, 1);
+positionHistory = zeros(params.nTimes, 2);
+secondDim = (params.nSignal + 2 * params.maxEyeMovement) ^ (params.dimension - 1);
 
 %% Pad signal with zeros on either side so we don't have edge problems
-buffered_signal = zeros(params.nSignal + 2 * params.maxEyeMovement, 1);
-buffered_signal(params.maxEyeMovement+1:params.maxEyeMovement + params.nSignal) = signal;
+bufferedSignal = zeros(params.nSignal + 2 * params.maxEyeMovement, secondDim);
+bufferedSignal(params.maxEyeMovement+1:params.maxEyeMovement + params.nSignal,...
+                (params.maxEyeMovement+1)^(params.dimension -1):(params.maxEyeMovement + params.nSignal)...
+                ^(params.dimension -1)) = signal;
+pos = zeros(params.dimension,1);
 
 %% Get samples and add noise to the data
 % Write a loop that chooses an eye position each time through and samples
@@ -51,9 +56,15 @@ buffered_signal(params.maxEyeMovement+1:params.maxEyeMovement + params.nSignal) 
 % is centered on the signal. If receptors fall outside of the signal for
 % any eye position, set their response to zero.
 for i = 1:params.nTimes
-    pos = int16(rand * 2 * params.maxEyeMovement - params.maxEyeMovement + 1);
-    positionHistory(i) = pos;
-    noise = randn(params.nReceptors, 1) * params.noiseSd;
-    response = Get_Response(eye, buffered_signal, pos, params) + noise;
+    for j = 1:params.dimension
+        pos(j) = int16(rand * 2 * params.maxEyeMovement - params.maxEyeMovement + 1);
+    end
+    positionHistory(i,:) = pos;
+    noise = randn(params.nReceptors,1) * params.noiseSd;
+    if params.dimension == 1
+        response = Get_Response(eye, bufferedSignal, pos, params) + noise;
+    else 
+        response = Get_Response_2D(eye, bufferedSignal, pos, params) + noise;
+    end
     samples(:,i) = response;
 end

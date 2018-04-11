@@ -1,4 +1,4 @@
-function [response] = Get_Response(eye,bufferedSignal,eyePos, params)
+function [response] = Get_Response_2D(eye,buffered_signal,eye_pos, params)
 % Generates the response of the eye as it views a signal from a specified
 % location. 
 %
@@ -9,13 +9,15 @@ function [response] = Get_Response(eye,bufferedSignal,eyePos, params)
 %     This function takes in a model of the eye, a buffered signal, the
 %     eye's current position, and params. It generates a vector of the 
 %     receptor's response to looking at the signal from the given position.
+%     This differs from Get_Response in that this function is used for 2D
+%     inputs.
 %
 % Inputs:
 %     eye            - A vector with 1's where there are receptors
 %     bufferedSignal - A vector which contains the signal padded by 0s
-%     eyePos        - The current position of the eye  
+%     eyePos         - The current position of the eye  
 %     params         - Standard parameters structure for the calculation.
-%                       See EyeMovements_1d for details 
+%                      See EyeMovements_1d for details 
 %
 % Outputs:
 %     response       - A 1D vector with size equal to the number of
@@ -33,20 +35,20 @@ function [response] = Get_Response(eye,bufferedSignal,eyePos, params)
 % History:
 %   03/22/18  ak   First draft
 
-
 %% Calculate starting position relative to the vector index
-adjustedPos = params.maxEyeMovement + eyePos(1);
+adjustedPos(1) = params.maxEyeMovement + eye_pos(1);
+adjustedPos(2) = params.maxEyeMovement + eye_pos(2);
+receptorIndex = find(eye == 1);
+receptorIndex = receptorIndex(:);
+pos_0 = floor(params.nSignal/2) - floor(params.eyeSize/2);
 
 %% Find responses and record them in response vector
-pos_0 = floor(params.nSignal/2) - floor(params.eyeSize/2);
-receptorIndex = find(eye == 1);
-receptorIndex = receptorIndex + pos_0;
 
-%Create a visual_field vector which represents the range the eye can
-%currrently see
-visualField = bufferedSignal(adjustedPos:adjustedPos + params.nSignal-1);
-
-
-response = visualField(receptorIndex);
+possibleVisualField = buffered_signal(adjustedPos(1):adjustedPos(1) + params.nSignal-1,...
+                adjustedPos(2):adjustedPos(2) + params.nSignal-1);
+actualVisualField = possibleVisualField(pos_0:pos_0+params.eyeSize-1,pos_0:pos_0+params.eyeSize-1);
+response = actualVisualField .* eye;
+response = response(:);
+response = response(receptorIndex);
 end
 

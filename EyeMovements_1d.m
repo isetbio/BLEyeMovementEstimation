@@ -14,21 +14,26 @@
 %   02/14/18  ak, dhb  Added header comments to Anant's first draft.
 %   02/22/18  ak       Finished second draft
 %   03/23/18  ak       Finished modulating code
+%   04/10/18  ak       Started adding 2D functionality
 
 % Freeze rng so we get same samples on multiple runs
-rng('default');
+% rng('default');
 
 %% Parameters describing what we'll simulate
 params.nSignal = 128;           % Max size of signal vector
-params.signalType = 1;          % 0 = random, 1 = sine wave, 2 = constant
+params.dimension = 1;           % 1 = 1D, 2 = 2D - 2D signal is a square
+params.signalType= 1;           % 0 = random, 1 = sine wave, 2 = constant
 params.eyeSize = 82;            % Number of pixels in the eye
 params.nReceptors = 40;         % Number of receptors, can't exceed number of pixels.
-params.eyeDistribution = 0;     % 0 = random, 1 = uniform
+params.eyeDistribution = 1;     % 0 = random, 1 = uniform
 params.maxEyeMovement = 20;     % Maximum number of pixels the eye can go left/right
 params.noiseSd = 0.05;          % Amount of noise added to receptor responses (sd)
 params.nTimes = 100;            % Number of "times" to generate data for.
 params.interpolate = 1;         % Decide whether or not to interpolate the data
-params.method = 3;              % 0 = simple method, 1 = smart method
+params.method = 3;              % 0 = simple method,
+                                % 1 = smart method,
+                                % 2 = learning method with history, 
+                                % 3 = learning method without history
 params.alpha = 0.8;             % ratio with which trials effect learning
 
 %% Set up some signal.
@@ -37,7 +42,7 @@ params.alpha = 0.8;             % ratio with which trials effect learning
 % params.nSignal.  You can generate random numbers, or draw a sine wave, or
 % any pattern you like.  You can even have more than one option here,
 % controlled by some flag.
-signal = Generate_Signal(params.signalType, params.nSignal);
+signal = Generate_Signal(params);
 
 %% Set up eye.
 %
@@ -47,7 +52,7 @@ signal = Generate_Signal(params.signalType, params.nSignal);
 % given the parameters, or have multiple options.  But, it would work for
 % any choice of parameters as long as there are not more receptors than eye
 % positions.
-eye = Generate_Eye(params.eyeSize, params.nReceptors, params.eyeDistribution);
+eye = Generate_Eye(params);
 
 %% Get the receptor samples for each time.
 [samples,positionHistory] = Get_Samples(signal,eye,params);
@@ -56,6 +61,7 @@ eye = Generate_Eye(params.eyeSize, params.nReceptors, params.eyeDistribution);
 % Keep track of the position by adding it to the position history array
 % Add some noise to the data in order to simulate the imperfections of the
 % eye.
+%{
 if params.method == 0
     [recoveredSignal, interpolatedSignal] = Method_0(samples, eye, params);
 elseif params.method == 1
@@ -63,9 +69,26 @@ elseif params.method == 1
 elseif params.method == 2
     [recoveredSignal, interpolatedSignal] = Method_2(eye, samples, positionHistory, params);
 elseif params.method == 3
-    [recoveredSignal, interpolatedSignal] = Method_3(eye, samples, params);    
+    [recoveredSignal, interpolatedSignal, offsetHistory] = Method_3(eye, samples,...
+                                                           positionHistory(1), params);    
 end
+%}
 
 %% Plot the data
-Plot_Data(samples, signal, recoveredSignal, interpolatedSignal, params);
-
+if params.dimension == 1
+    Plot_Grey_Scale(samples);
+end
+% Method 0
+[recoveredSignal, interpolatedSignal] = Method_0(samples, eye, params);
+Plot_Data(signal, recoveredSignal, interpolatedSignal, 'Method 0', params);
+% Method 1
+[recoveredSignal, interpolatedSignal] = Method_1(eye, samples, positionHistory, params);
+Plot_Data(signal, recoveredSignal, interpolatedSignal, 'Method 1', params);
+% Method 2
+[recoveredSignal, interpolatedSignal] = Method_2(eye, samples, positionHistory, params);
+Plot_Data(signal, recoveredSignal, interpolatedSignal, 'Method 2', params);
+% Method 3
+[recoveredSignal, interpolatedSignal, offsetHistory] = Method_3(eye, samples,...
+                                                       positionHistory(1), params);                                                   
+Plot_Offset(positionHistory, offsetHistory, params);
+Plot_Data(signal, recoveredSignal, interpolatedSignal, 'Method 3', params);

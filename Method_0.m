@@ -48,7 +48,8 @@ averageOutput = mean(samples,1);
 pos_0 = floor(params.nSignal/2) - floor(params.eyeSize/2);
 
 %% Create the recovered signal
-recoveredSignal = zeros(params.nSignal,1);
+secondDim = params.nSignal^(params.dimension-1);
+recoveredSignal = zeros(params.nSignal,secondDim);
 imageEmbeddedReceptorIndex = find(eye == 1);
 imageEmbeddedReceptorIndex = imageEmbeddedReceptorIndex + pos_0;
 recoveredSignal(imageEmbeddedReceptorIndex) = averageOutput;

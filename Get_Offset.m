@@ -46,11 +46,18 @@ if(i ~= 1)
         B = ~isnan(runningImage);
         C = A & B;
         % Find the MSE at this offset and store it
-        error = immse(currentTrial(C), runningImage(C));
+        if(max(C) < 1)
+            error = 0;
+        else
+            error = immse(currentTrial(C), runningImage(C));
+        end
         possibleOffset(i + params.maxEyeMovement + 1) = error;
     end
     % Return the offset with the least error
-    offset = find(possibleOffset == min(possibleOffset));
+    offset = find(possibleOffset == min(possibleOffset)) - params.maxEyeMovement - 1;
+    % Prevents cases where there are multiple offsets with 0 error. This
+    % occurs when the eye is significantly smaller than the signal.
+    offset = offset(1);
 else
     % Base case for the first sample
     offset = 0;

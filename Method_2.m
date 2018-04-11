@@ -46,7 +46,7 @@ imageLocation = 1:params.nSignal;
 %% Cycle through the trials and make a more accurate image
 for i = 1:params.nTimes
     effectiveReceptorIndex = find(eye == 1) + positionHistory(i) + floor(params.nSignal/2) -...
-                             floor(params.eyeSize/2);
+                             floor(params.eyeSize/2)-1;
     effectiveSamples = samples(:,i);
     currentTrial = Interpolate(effectiveReceptorIndex, effectiveSamples, imageLocation);
     % Only update the indices which have values
@@ -61,4 +61,4 @@ for i = 1:params.nTimes
 end
 %% Return the now accurate image
 interpolatedSignal = runningImage;
-recoveredSignal = runningImage;
+recoveredSignal = NaN(1,params.nSignal);

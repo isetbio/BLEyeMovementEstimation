@@ -1,4 +1,4 @@
-function [recoveredSignal, interpolatedSignal] = Method_3(eye,samples,params)
+function [recoveredSignal, interpolatedSignal, offsetHistory] = Method_3(eye,samples, pos_0, params)
 % Reconstruct signal with perfect knowledge of eye position history
 %
 % Syntax:
@@ -15,6 +15,7 @@ function [recoveredSignal, interpolatedSignal] = Method_3(eye,samples,params)
 %     samples            - A m by n matrix, where m is the number of time
 %                          points and n is the number of receptors.  So
 %                          each row is the responses at one time point.
+%     pos_0              - The initial position of the eye.
 %     params             - Standard parameters structure for the calculation.
 %                          See EyeMovements_1d for details 
 % Outputs:
@@ -39,10 +40,16 @@ function [recoveredSignal, interpolatedSignal] = Method_3(eye,samples,params)
 %% Create original image which will be modified
 runningImage = NaN(1,params.nSignal);
 imageLocation = 1:params.nSignal;
+offsetHistory = zeros(params.nTimes, 1);
 %% Cycle through the trials and make a more accurate image
 for i = 1:params.nTimes
     % Find the most likely offset
-    offset = Get_Offset(eye, samples(:,i), runningImage, i, params);
+    if i == 1
+        offset = pos_0;
+    else 
+        offset = Get_Offset(eye, samples(:,i), runningImage, i, params);
+    end
+    offsetHistory(i) = offset;
     effectiveReceptorIndex = find(eye == 1) + offset + floor(params.nSignal/2) -...
                              floor(params.eyeSize/2);
     effectiveSamples = samples(:,i);
@@ -58,8 +65,10 @@ for i = 1:params.nTimes
     runningImage(invalidReceptors) = currentTrial(invalidReceptors);
 end
 %% Return the now accurate image
+%interpolatedSignal = zeros(params.nSignal, 1);
+%interpolatedSignal(1:end-1) = runningImage(2:end);
 interpolatedSignal = runningImage;
-recoveredSignal = runningImage;
+recoveredSignal = NaN(1,params.nSignal);
     
 end
 

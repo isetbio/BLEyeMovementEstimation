@@ -49,16 +49,16 @@ function [recoveredSignal, interpolatedSignal] = Method_1(eye,samples,positionHi
 %% Get the average response of each position that the eye had
 repeats = zeros(params.nSignal,1);
 image = zeros(params.nSignal,1);
-receptor_index = find(eye==1);
+receptor_index = find(eye==1)-1;
 
 % Loop through and count the number of times each position was looked at by
 % a receptor
 for i = 1:params.nTimes
-    adjusted_pos = positionHistory(i) + floor(params.nSignal/2) - ...
+    adjustedPos = positionHistory(i) + floor(params.nSignal/2) - ...
         floor(params.eyeSize/2);
-    adjusted_receptor_index = receptor_index + adjusted_pos;
-    repeats(adjusted_receptor_index) = repeats(adjusted_receptor_index) + 1;
-    image(adjusted_receptor_index) = image(adjusted_receptor_index) + ...
+    adjustedReceptorIndex = receptor_index + adjustedPos;
+    repeats(adjustedReceptorIndex) = repeats(adjustedReceptorIndex) + 1;
+    image(adjustedReceptorIndex) = image(adjustedReceptorIndex) + ...
         samples(:,i);
 end
 

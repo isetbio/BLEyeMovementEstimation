@@ -34,7 +34,7 @@ n = rand;
 signal = zeros(params.nSignal, secondDim);
 
 %% Fill in values in accordance with the type of signal specified
-if params.signalType == 0
+if params.signalType == 0 || params.signalType == 3
     for i = 1:params.nSignal
         if params.dimension == 1
             signal(i) = rand;
@@ -44,6 +44,14 @@ if params.signalType == 0
             end
         end
     end
+    
+    % Now filter for type 3
+    if (params.signalType == 3)
+        filter = fspecial('gaussian',2*params.filterWidth,params.filterWidth);
+        filter = filter/sum(filter);
+        signal = conv(signal,filter,'same');
+    end
+    
 elseif params.signalType == 1
     for i = 1:params.nSignal
         if params.dimension == 1

@@ -1,4 +1,4 @@
-function [] = Plot_Data(signal, recoveredSignal, interpolatedSignal, name, params)
+function [] = Plot_Data(signal, recoveredSignal, interpolatedSignal, name, fig, params)
 % Plot the original and recovered signals
 %
 % Syntax:
@@ -30,14 +30,15 @@ function [] = Plot_Data(signal, recoveredSignal, interpolatedSignal, name, param
 % See also:
 %
 % History
-%   03/22/18  ak       Finished modulating code
-%   03/30/18  ak       Moved interpolation code to Interpolate function
+%   03/22/18  ak    Finished modulating code
+%   03/30/18  ak    Moved interpolation code to Interpolate function
+%   04/22/18  ak    Modified function to allow trial by trial simulation
 
 %% Plot the signals
 
 % Plot the original signal and the data points from the recovered signal
 imageEmbeddedReceptorIndex = find(recoveredSignal ~= 0);
-figure; clf; hold on
+figure(fig); clf; hold on
 x = 1:params.nSignal;
 plot(x, signal,'k','LineWidth', 3);
 plot(x(imageEmbeddedReceptorIndex),recoveredSignal(imageEmbeddedReceptorIndex),...
@@ -58,6 +59,5 @@ if (params.interpolate > 0)
 else
     legend("original signal", "samples");
 end
-
 end
 

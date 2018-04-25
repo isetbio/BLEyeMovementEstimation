@@ -36,6 +36,7 @@ function [recoveredSignal, interpolatedSignal, offsetHistory] = Method_3(eye,sam
 % History
 % 3/28/18     ak    First Draft
 % 04/02/18    ak    Completed
+% 04/22/19    ak    Fixed off by one error
   
 %% Create original image which will be modified
 runningImage = NaN(1,params.nSignal);
@@ -46,9 +47,12 @@ offsetHistory = zeros(params.nTimes, 1);
 for i = 1:params.nTimes
     % Find the most likely offset
     if i == 1
-        offset = pos_0;
+        offset = pos_0-1;
     else 
         offset = Get_Offset(eye, samples(:,i), runningImage, i, params);
+    end
+    if i==1
+        offset = offset + 1;
     end
     offsetHistory(i) = offset;
     effectiveReceptorIndex = find(eye == 1) + offset + floor(params.nSignal/2) -...

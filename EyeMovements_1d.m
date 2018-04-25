@@ -15,10 +15,15 @@
 %   02/22/18  ak       Finished second draft
 %   03/23/18  ak       Finished modulating code
 %   04/10/18  ak       Started adding 2D functionality
+%   04/22/18  ak       Added visualize flag to allow trial by trial
+%                      simulation of data
 
+%% Initial Settings
 % Freeze rng so we get same samples on multiple runs
-% rng('default');
+rng('default');
 
+% Allow pausing
+pause on;
 % Clear
 clear; close all;
 
@@ -46,6 +51,9 @@ params.alpha = 0.8;             % Ratio with which trials effect learning
                                 % of 0 uses only the current sample, and as
                                 % alpha increases the past begins to
                                 % matter.
+params.visualize = 1;           % 0 = run all trials and display final graphs
+                                % 1 = display graphs after each trial and
+                                % update results
 
 %% Set up some signal.
 %
@@ -89,17 +97,44 @@ end
 if params.dimension == 1
     Plot_Grey_Scale(samples);
 end
-% Method 0
-[recoveredSignal, interpolatedSignal] = Method_0(samples, eye, params);
-Plot_Data(signal, recoveredSignal, interpolatedSignal, 'Method 0', params);
-% Method 1
-[recoveredSignal, interpolatedSignal] = Method_1(eye, samples, positionHistory, params);
-Plot_Data(signal, recoveredSignal, interpolatedSignal, 'Method 1', params);
-% Method 2
-[recoveredSignal, interpolatedSignal] = Method_2(eye, samples, positionHistory, params);
-Plot_Data(signal, recoveredSignal, interpolatedSignal, 'Method 2', params);
-% Method 3
-[recoveredSignal, interpolatedSignal, offsetHistory] = Method_3(eye, samples,...
-                                                       positionHistory(1), params);                                                   
-Plot_Offset(positionHistory, offsetHistory, params);
-Plot_Data(signal, recoveredSignal, interpolatedSignal, 'Method 3', params);
+fig0 = figure;
+fig1 = figure;
+fig2 = figure;
+fig3 = figure;
+figOffset = figure;
+if params.visualize == 0
+    % Method 0
+    [recoveredSignal, interpolatedSignal] = Method_0(samples, eye, params);
+    Plot_Data(signal, recoveredSignal, interpolatedSignal, 'Method 0', fig0, params);
+    % Method 1
+    [recoveredSignal, interpolatedSignal] = Method_1(eye, samples, positionHistory, params);
+    Plot_Data(signal, recoveredSignal, interpolatedSignal, 'Method 1', fig1, params);
+    % Method 2
+    [recoveredSignal, interpolatedSignal] = Method_2(eye, samples, positionHistory, params);
+    Plot_Data(signal, recoveredSignal, interpolatedSignal, 'Method 2',fig2, params);
+    % Method 3
+    [recoveredSignal, interpolatedSignal, offsetHistory] = Method_3(eye, samples,...
+                                                           positionHistory(1), params);                                                   
+    Plot_Offset(positionHistory, offsetHistory, figOffset, params);
+    Plot_Data(signal, recoveredSignal, interpolatedSignal, 'Method 3',fig3, params);
+else
+    for i = 1:params.nTimes
+        new_params = params;
+        new_params.nTimes = i;
+         % Method 0
+        [recoveredSignal, interpolatedSignal] = Method_0(samples(:,1:i), eye, new_params);
+        Plot_Data(signal, recoveredSignal, interpolatedSignal, 'Method 0', fig0, new_params);
+        % Method 1
+        [recoveredSignal, interpolatedSignal] = Method_1(eye, samples(:,1:i), positionHistory(1:i), new_params);
+        Plot_Data(signal, recoveredSignal, interpolatedSignal, 'Method 1', fig1, new_params);
+        % Method 2
+        [recoveredSignal, interpolatedSignal] = Method_2(eye, samples(:,1:i), positionHistory(1:i), new_params);
+        Plot_Data(signal, recoveredSignal, interpolatedSignal, 'Method 2', fig2, new_params);
+        % Method 3a
+        [recoveredSignal, interpolatedSignal, offsetHistory] = Method_3(eye, samples(:,1:i),...
+                                                               positionHistory(1), new_params);                                                   
+        Plot_Offset(positionHistory(1:i), offsetHistory, figOffset, new_params);
+        Plot_Data(signal, recoveredSignal, interpolatedSignal, 'Method 3', fig3, new_params);
+        pause;
+    end
+end

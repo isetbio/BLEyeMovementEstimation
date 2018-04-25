@@ -22,17 +22,19 @@
 % Freeze rng so we get same samples on multiple runs
 rng('default');
 
-% Allow pausing
+%% Allow pausing
 pause on;
-% Clear
+
+%% Clear
 clear; close all;
 
 %% Parameters describing what we'll simulate
 params.nSignal = 128;           % Max size of signal vector
 params.dimension = 1;           % 1 = 1D, 2 = 2D - 2D signal is a square
-params.signalType= 1;           % 0 = random, 1 = sine wave, 2 = constant
+params.signalType= 3;           % 0 = random, 1 = sine wave, 2 = constant, 3 = filtered noise
 params.spatialFrequencyX = 4;   % Spatial frequency of sinusoid
 params.spatialFrequencyY = 7;   % Spatial frequency of sinusoid
+params.filterWidth = 2;        % For filtered noise, this is the filter width
 params.phaseX = 0;              % Spatial phase in X
 params.phaseY = 0;              % Spatial phase in Y
 params.eyeSize = 82;            % Number of pixels in the eye
@@ -40,7 +42,7 @@ params.nReceptors = 20;         % Number of receptors, can't exceed number of pi
 params.eyeDistribution = 1;     % 0 = random, 1 = uniform
 params.maxEyeMovement = 20;     % Maximum number of pixels the eye can go left/right
 params.noiseSd = 0.05;          % Amount of noise added to receptor responses (sd)
-params.nTimes = 100;           % Number of "times" to generate data for.
+params.nTimes = 100;            % Number of "times" to generate data for.
 params.interpolate = 1;         % Decide whether or not to interpolate the data
 params.method = 3;              % 0 = simple method,
                                 % 1 = smart method,
@@ -51,7 +53,7 @@ params.alpha = 0.8;             % Ratio with which trials effect learning
                                 % of 0 uses only the current sample, and as
                                 % alpha increases the past begins to
                                 % matter.
-params.visualize = 1;           % 0 = run all trials and display final graphs
+params.visualize = 0;           % 0 = run all trials and display final graphs
                                 % 1 = display graphs after each trial and
                                 % update results
 

@@ -1,24 +1,22 @@
-function [recoveredSignal, interpolatedSignal] = Method_2(eye,samples,positionHistory,params)
+function [recoveredSignal, interpolatedSignal, offsetHistory] = Method_3a(eye,samples, pos_0, params)
 % Reconstruct signal with perfect knowledge of eye position history
 %
 % Syntax:
-%   [recoveredSignal, interpolatedSignal] = Method_2(eye,samples,positionHistory,params)
+%   [recoveredSignal, interpolatedSignal, offsetHistory] = Method_3a(eye,samples, pos_0, params)
 %
 % Description:
 %   This runs the smarter method of analyzing the eye's perception by
 %   implementing a learning heuristic. The method will create a
 %   running simulation of the image and adjust it with each new trial. This
-%   method gets access to the position history.
+%   differs from method 3 in that this method places an equal weight on each trial.
+%   This method does not get access to the position history
 %
 % Inputs:
 %     eye                - A vector with 1's where there are receptors
 %     samples            - A m by n matrix, where m is the number of time
 %                          points and n is the number of receptors.  So
 %                          each row is the responses at one time point.
-%     positionHistory    - A vector containing the positional offset of the
-%                          receptor array with respect to the signal, where 0
-%                          means the receptor array is centered on the signal.
-%                          Can be positive or negative.
+%     pos_0              - The initial position of the eye.
 %     params             - Standard parameters structure for the calculation.
 %                          See EyeMovements_1d for details 
 % Outputs:
@@ -29,6 +27,9 @@ function [recoveredSignal, interpolatedSignal] = Method_2(eye,samples,positionHi
 %                          signal for convenience
 %     interpolatedSignal -  A 1D vector that is the recovered signal after
 %                           it has been interpolated
+%     OffsetHistory      -  A 1D vector of length params.nTrials which
+%                           contains the offset calculated by the method
+%                           for each trial
 
 % Optional key/value pairs:
 %    None.
@@ -37,29 +38,44 @@ function [recoveredSignal, interpolatedSignal] = Method_2(eye,samples,positionHi
 %
 
 % History
-% 3/28/18     ak    First Draft
-% 04/02/18    ak    Completed
-% 05/10/18    ak    Fixed error with alpha calculations
+% 5/3/18     ak    First Draft
 
 %% Create original image which will be modified
 runningImage = NaN(1,params.nSignal);
 imageLocation = 1:params.nSignal;
+offsetHistory = zeros(params.nTimes, 1);
 %% Cycle through the trials and make a more accurate image
 for i = 1:params.nTimes
-    effectiveReceptorIndex = find(eye == 1) + positionHistory(i) + floor(params.nSignal/2) -...
-                             floor(params.eyeSize/2)-1;
+    % Find the most likely offset
+    if i == 1
+        offset = pos_0-1;
+    else 
+        offset = Get_Offset(eye, samples(:,i), runningImage, i, params);
+    end
+    if i==1
+        offset = offset + 1;
+    end
+    alpha = (i-1)/i;
+    offsetHistory(i) = offset;
+    effectiveReceptorIndex = find(eye == 1) + offset + floor(params.nSignal/2) -...
+                             floor(params.eyeSize/2);
     effectiveSamples = samples(:,i);
     currentTrial = Interpolate(effectiveReceptorIndex, effectiveSamples, imageLocation);
     % Only update the indices which have values
     validReceptors = ~isnan(runningImage);
     invalidReceptors = isnan(runningImage);
-    oldValid = runningImage(validReceptors) * params.alpha;
-    newValid = currentTrial(validReceptors) * (1 - params.alpha);
-    newValid(isnan(newValid)) = oldValid(isnan(newValid)) / (params.alpha/(1-params.alpha));
+    oldValid = runningImage(validReceptors) * alpha;
+    newValid = currentTrial(validReceptors) * (1 - alpha);
+    newValid(isnan(newValid)) = oldValid(isnan(newValid)) / (alpha/(1-alpha));
     % Update the running image
     runningImage(validReceptors) = oldValid + newValid;
     runningImage(invalidReceptors) = currentTrial(invalidReceptors);
 end
 %% Return the now accurate image
+%interpolatedSignal = zeros(params.nSignal, 1);
+%interpolatedSignal(1:end-1) = runningImage(2:end);
 interpolatedSignal = runningImage;
 recoveredSignal = NaN(1,params.nSignal);
+    
+end
+

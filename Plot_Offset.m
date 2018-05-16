@@ -1,4 +1,4 @@
-function [] = Plot_Offset(positionHistory, offsetHistory, fig, params)
+function [] = Plot_Offset(positionHistory, offsetHistory1, offsetHistory2, fig, params)
 % Plot the original and estimated points for method 3
 %
 % Syntax:
@@ -31,17 +31,20 @@ function [] = Plot_Offset(positionHistory, offsetHistory, fig, params)
 % History
 %   04/06/18   ak   First draft
 %   04/22/18   ak   Modified function to allow trial by trial simulation
+%   05/3/18    ak   Updated to allow multiple sets of offsets
 
 %% Plot the Offsets and Position History
 x = 1:params.nTimes;
 figure(fig); clf; hold on
 plot(x,positionHistory,'ro','MarkerFaceColor','r','MarkerSize',12);
-plot(x,offsetHistory,'bo','MarkerFaceColor','b','MarkerSize',8);
+plot(x,offsetHistory1,'bo','MarkerFaceColor','b','MarkerSize',8);
+plot(x,offsetHistory2,'go','MarkerFaceColor','b','MarkerSize',6);
 plot(x,positionHistory,'r');
-plot(x,offsetHistory,'b');
+plot(x,offsetHistory1,'b');
+plot(x,offsetHistory2,'g');
 xlabel('Time Step');
 ylabel('Eye Offset Position')
-legend({'Position History', 'Offset History'},'Location','NorthEastOutside');
+legend({'Position History', 'Offset History 3', 'Offset History 3a'},'Location','NorthEastOutside');
 axis([0,params.nTimes,-params.maxEyeMovement,params.maxEyeMovement])
 end
 

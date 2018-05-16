@@ -2,7 +2,7 @@ function [recoveredSignal, interpolatedSignal, offsetHistory] = Method_3(eye,sam
 % Reconstruct signal with perfect knowledge of eye position history
 %
 % Syntax:
-%   [recoveredSignal, interpolatedSignal] = Method_3(eye,samples,params)
+%   [recoveredSignal, interpolatedSignal, offsetHistory] = Method_3(eye, samples, pos_0,params)
 %
 % Description:
 %   This runs the smarter method of analyzing the eye's perception by
@@ -26,6 +26,9 @@ function [recoveredSignal, interpolatedSignal, offsetHistory] = Method_3(eye,sam
 %                          signal for convenience
 %     interpolatedSignal -  A 1D vector that is the recovered signal after
 %                           it has been interpolated
+%     OffsetHistory      -  A 1D vector of length params.nTrials which
+%                           contains the offset calculated by the method
+%                           for each trial
 
 % Optional key/value pairs:
 %    None.
@@ -37,6 +40,7 @@ function [recoveredSignal, interpolatedSignal, offsetHistory] = Method_3(eye,sam
 % 3/28/18     ak    First Draft
 % 04/02/18    ak    Completed
 % 04/22/19    ak    Fixed off by one error
+% 05/10/18    ak    Fixed error with alpha calculations
   
 %% Create original image which will be modified
 runningImage = NaN(1,params.nSignal);
@@ -64,7 +68,7 @@ for i = 1:params.nTimes
     invalidReceptors = isnan(runningImage);
     oldValid = runningImage(validReceptors) * params.alpha;
     newValid = currentTrial(validReceptors) * (1 - params.alpha);
-    newValid(isnan(newValid)) = oldValid(isnan(newValid)) / 4;
+    newValid(isnan(newValid)) = oldValid(isnan(newValid))/ (params.alpha/(1-params.alpha));
     % Update the running image
     runningImage(validReceptors) = oldValid + newValid;
     runningImage(invalidReceptors) = currentTrial(invalidReceptors);

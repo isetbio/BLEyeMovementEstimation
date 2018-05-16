@@ -48,7 +48,7 @@ params.method = 3;              % 0 = simple method,
                                 % 1 = smart method,
                                 % 2 = learning method with history, 
                                 % 3 = learning method without history
-params.alpha = 0.8;             % Ratio with which trials effect learning
+params.alpha = 0.5;             % Ratio with which trials effect learning
                                 % This applies to methods 2 and 3.  A value
                                 % of 0 uses only the current sample, and as
                                 % alpha increases the past begins to
@@ -103,6 +103,7 @@ fig0 = figure;
 fig1 = figure;
 fig2 = figure;
 fig3 = figure;
+fig3a = figure;
 figOffset = figure;
 if params.visualize == 0
     % Method 0
@@ -115,10 +116,14 @@ if params.visualize == 0
     [recoveredSignal, interpolatedSignal] = Method_2(eye, samples, positionHistory, params);
     Plot_Data(signal, recoveredSignal, interpolatedSignal, 'Method 2',fig2, params);
     % Method 3
-    [recoveredSignal, interpolatedSignal, offsetHistory] = Method_3(eye, samples,...
-                                                           positionHistory(1), params);                                                   
-    Plot_Offset(positionHistory, offsetHistory, figOffset, params);
+    [recoveredSignal, interpolatedSignal, offsetHistory1] = Method_3(eye, samples,...
+                                                          positionHistory(1), params);
     Plot_Data(signal, recoveredSignal, interpolatedSignal, 'Method 3',fig3, params);
+    % Method 3a
+    [recoveredSignal, interpolatedSignal, offsetHistory2] = Method_3a(eye, samples,...
+                                                          positionHistory(1), params);
+    Plot_Data(signal, recoveredSignal, interpolatedSignal, 'Method 3a',fig3a, params);
+    Plot_Offset(positionHistory, offsetHistory1, offsetHistory2, figOffset, params);
 else
     for i = 1:params.nTimes
         new_params = params;
@@ -132,11 +137,15 @@ else
         % Method 2
         [recoveredSignal, interpolatedSignal] = Method_2(eye, samples(:,1:i), positionHistory(1:i), new_params);
         Plot_Data(signal, recoveredSignal, interpolatedSignal, 'Method 2', fig2, new_params);
-        % Method 3a
-        [recoveredSignal, interpolatedSignal, offsetHistory] = Method_3(eye, samples(:,1:i),...
-                                                               positionHistory(1), new_params);                                                   
-        Plot_Offset(positionHistory(1:i), offsetHistory, figOffset, new_params);
+        % Method 3
+        [recoveredSignal, interpolatedSignal, offsetHistory1] = Method_3(eye, samples(:,1:i),...
+                                                               positionHistory(1), new_params);
         Plot_Data(signal, recoveredSignal, interpolatedSignal, 'Method 3', fig3, new_params);
+        % Method 3a
+        [recoveredSignal, interpolatedSignal, offsetHistory2] = Method_3a(eye, samples(:,1:i),...
+                                                               positionHistory(1), new_params);
+        Plot_Offset(positionHistory(1:i), offsetHistory1, offsetHistory2, figOffset, new_params);
+        Plot_Data(signal, recoveredSignal, interpolatedSignal, 'Method 3a', fig3a, new_params);
         pause;
     end
 end
